@@ -28,9 +28,9 @@
 
     <!-- Feed list -->
     <template v-else>
-      <div class="feed-list">
+      <TransitionGroup name="feed-item" tag="div" class="feed-list">
         <TreePost v-for="(tree, idx) in store.trees" :key="tree.id ?? idx" :tree="tree" />
-      </div>
+      </TransitionGroup>
 
       <!-- Sentinel: triggers loadMore when visible -->
       <div v-if="store.hasMore" ref="sentinel" class="sentinel">
@@ -44,11 +44,20 @@
         — All trees loaded —
       </div>
     </template>
+
+    <!-- Back to Top button -->
+    <Transition name="back-top">
+      <button v-if="scrollY > 400" class="back-top" @click="scrollToTop" title="Back to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </button>
+    </Transition>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTreeFeedStore } from '@/stores/treeFeed'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
@@ -84,6 +93,18 @@ const { target: sentinel } = useInfiniteScroll(
 onMounted(() => {
   loadInitial()
 })
+
+// ─── Back to Top ────────────────────────────────
+const scrollY = ref(0)
+function onScroll() {
+  scrollY.value = window.scrollY
+}
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 </script>
 
 <style scoped>
@@ -97,6 +118,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  position: relative;
+}
+
+/* ─── Feed item enter animation ─── */
+.feed-item-enter-active {
+  transition: all 0.35s ease-out;
+}
+
+.feed-item-enter-from {
+  opacity: 0;
+  transform: translateY(24px);
 }
 
 /* ---------- State messages ---------- */
@@ -163,5 +195,41 @@ onMounted(() => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Back to Top ─── */
+.back-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 900;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.back-top:hover {
+  background: #374151;
+  transform: scale(1.05);
+}
+
+.back-top-enter-active,
+.back-top-leave-active {
+  transition: all 0.25s ease;
+}
+
+.back-top-enter-from,
+.back-top-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
 }
 </style>
