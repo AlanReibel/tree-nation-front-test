@@ -1,8 +1,8 @@
 <template>
   <div class="comment-list">
-    <!-- Loading skeleton -->
+    <!-- Loading skeleton: match the known expected count (capped at 5) -->
     <div v-if="loading" class="cl-skeleton">
-      <div v-for="i in 3" :key="i" class="skeleton-row">
+      <div v-for="i in skeletonCount" :key="i" class="skeleton-row">
         <div class="skeleton-avatar" />
         <div class="skeleton-lines">
           <div class="skeleton-line short" />
@@ -53,7 +53,12 @@ const props = defineProps({
   data: { type: Array, default: null },
   /** Whether the parent is still loading pre-fetched data */
   loading: { type: Boolean, default: false },
+  /** Expected count from the feed item — used to render matching skeletons */
+  expectedCount: { type: Number, default: 0 },
 })
+
+// Show as many skeletons as the expected count, max 5 to avoid clutter
+const skeletonCount = computed(() => Math.min(Math.max(props.expectedCount, 1), 5))
 
 const defaultAvatar =
   'data:image/svg+xml,' +

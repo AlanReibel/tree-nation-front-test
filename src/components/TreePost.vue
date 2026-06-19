@@ -97,6 +97,7 @@
           :tree-id="tree.id"
           :data="prefetchedComments"
           :loading="prefetchingComments"
+          :expected-count="tree.comments_count"
         />
       </div>
     </transition>
@@ -118,6 +119,7 @@
             :tree-id="tree.id"
             :data="prefetchedLikes"
             :loading="prefetchingLikes"
+            :expected-count="tree.likes_count"
           />
         </div>
       </div>
