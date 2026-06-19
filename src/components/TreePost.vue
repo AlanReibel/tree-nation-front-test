@@ -3,7 +3,15 @@
     <!-- ─── Header: avatar + name + time ─── -->
     <div class="post-header">
       <img
-        :src="tree.owner?.profile_img || defaultAvatar"
+        v-if="!avatarErrored"
+        :src="avatarSrc"
+        alt=""
+        class="avatar"
+        @error="avatarErrored = true"
+      />
+      <img
+        v-else
+        :src="defaultAvatar"
         alt=""
         class="avatar"
       />
@@ -29,11 +37,12 @@
 
     <!-- ─── Image ─── -->
     <img
-      v-if="tree.image"
+      v-if="tree.image && !imageErrored"
       :src="tree.image"
       alt="Tree photo"
       class="post-image"
       loading="lazy"
+      @error="imageErrored = true"
     />
 
     <!-- ─── Stats row ─── -->
@@ -72,18 +81,44 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { timeAgo, formatScore } from '@/utils/time'
 
 const props = defineProps({
   tree: { type: Object, required: true },
 })
 
+// --- Image error fallbacks ---
+// Some S3 profile images return AccessDenied or are double-wrapped.
+// On error we swap to a generated SVG placeholder.
+const avatarErrored = ref(false)
+const imageErrored = ref(false)
+
 const defaultAvatar =
   'data:image/svg+xml,' +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
   )
+
+/**
+ * Some profile_img values come double-wrapped from the API:
+ *   baseUrl/https%3A//baseUrl/actual-path
+ * This extracts and decodes the inner URL.
+ * Falls back to the raw URL if no wrapping is detected.
+ */
+function unwrapProfileUrl(url) {
+  if (!url) return null
+  const match = url.match(/https%3A\/\/([^#?]+)/i)
+  if (match) {
+    return decodeURIComponent(`https://${match[1]}`)
+  }
+  return url
+}
+
+const avatarSrc = computed(() => {
+  const raw = props.tree.owner?.profile_img
+  return raw ? unwrapProfileUrl(raw) : defaultAvatar
+})
 
 const ownerName = computed(() => {
   const o = props.tree.owner
