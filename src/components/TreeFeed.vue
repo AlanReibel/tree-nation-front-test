@@ -1,0 +1,160 @@
+<template>
+  <section class="tree-feed">
+    <!-- Loading indicator (initial) -->
+    <div v-if="!initialLoadDone" class="state-message loading">
+      <div class="spinner" />
+      <span>Loading trees...</span>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="store.error" class="state-message error">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{{ store.error }}</span>
+      <button class="retry-btn" @click="retry">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div v-else-if="store.isEmpty" class="state-message empty">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+      <span>No trees found.</span>
+    </div>
+
+    <!-- Feed list -->
+    <template v-else>
+      <div class="feed-list">
+        <TreePost v-for="(tree, idx) in store.trees" :key="tree.id ?? idx" :tree="tree" />
+      </div>
+
+      <!-- Sentinel: triggers loadMore when visible -->
+      <div v-if="store.hasMore" ref="sentinel" class="sentinel">
+        <div v-if="store.isLoading" class="sentinel-loading">
+          <div class="spinner" />
+          <span>Loading more...</span>
+        </div>
+      </div>
+
+      <div v-else class="end-message">
+        — All trees loaded —
+      </div>
+    </template>
+  </section>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { useTreeFeedStore } from '@/stores/treeFeed'
+import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import TreePost from './TreePost.vue'
+
+const store = useTreeFeedStore()
+
+const initialLoadDone = ref(false)
+
+async function loadInitial() {
+  await store.loadMore()
+  initialLoadDone.value = true
+}
+
+async function retry() {
+  store.reset()
+  await loadInitial()
+}
+
+// Wire the sentinel to loadMore
+const { target: sentinel } = useInfiniteScroll(
+  () => store.loadMore(),
+  store.isLoading,
+  store.hasMore,
+)
+
+onMounted(() => {
+  loadInitial()
+})
+</script>
+
+<style scoped>
+.tree-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---------- State messages ---------- */
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.state-message.error {
+  color: #dc2626;
+}
+
+.retry-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.retry-btn:hover {
+  background: #f9fafb;
+}
+
+/* ---------- Sentinel ---------- */
+.sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.sentinel-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.end-message {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  padding: 1rem 0;
+}
+
+/* ---------- Spinner ---------- */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
