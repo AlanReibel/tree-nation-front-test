@@ -1,21 +1,139 @@
-# tree-nation-front-test
+# Tree Feed — Tree Nation Front Test
 
-Tree planting social feed
+Social feed of planted trees with infinite scroll, comments, and likes.
 
-## Project Setup
+Built with **Vue 3**, **Pinia**, and **Vite**.
 
-```sh
-pnpm install
+---
+
+## How to run
+
+### Prerequisites
+
+- Node.js ≥ 22
+
+### Setup
+
+```bash
+npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Development
 
-```sh
-pnpm dev
+```bash
+npm run dev
 ```
 
-### Compile and Minify for Production
+Opens at `http://localhost:5173`. The Vite dev server proxies `/bff/*` requests to the Tree Nation API — no CORS issues.
 
-```sh
-pnpm build
+### Production build
+
+```bash
+npm run build
+npm run preview
 ```
+
+---
+
+## Assumptions
+
+### API discovery
+
+The documented base URL (`https://youcannevertestenough.tree-nation.com/`) returns the company's marketing site, not the API. The actual API lives under `/bff`, discovered by inspecting network requests on the live site.
+
+### Sorting
+
+- **Feed** is ordered by `created_at DESC` (newest first), matching the requirement that items always sort by creation time.
+- **Comments and likes** arrive already sorted by `created_at ASC` from the API — no client-side sort needed.
+
+### Parameters
+
+- `sortDirection` must be uppercase (`DESC`), lowercase (`desc`) is silently ignored.
+- `types[]` requires bracket syntax with repeated keys: `types[]=success_seed&types[]=tree`.
+- `isCollected=true` filters to collected trees only.
+
+### Image failures
+
+Many profile images from the S3 bucket return `AccessDenied` or are double-wrapped (the URL contains an encoded copy of itself). The app gracefully falls back to a generated SVG placeholder on error.
+
+### Caching
+
+- **Feed pages** are cached in-memory with a 5-minute TTL to avoid redundant network calls when revisiting pages.
+- **Comments and likes** are cached per-post in component refs after first fetch (or pre-fetch).
+
+### Pre-fetch strategy
+
+Comments and likes are pre-fetched when a post stays in the viewport for ≥ 800ms (the user paused to read). If the user scrolls past quickly, the request is cancelled — no wasted bandwidth.
+
+---
+
+## App structure
+
+```
+src/
+├── main.js                          # Entry point — creates Vue app + Pinia
+├── App.vue                          # Root layout with header + TreeFeed
+│
+├── stores/
+│   └── treeFeed.js                  # Pinia store — pagination, cache, API calls
+│
+├── composables/
+│   └── useInfiniteScroll.js         # IntersectionObserver sentinel for infinite scroll
+│
+├── utils/
+│   └── time.js                      # timeAgo() and formatScore() helpers
+│
+└── components/
+    ├── TreeFeed.vue                 # Feed container — loading/empty/error/sentinel states
+    ├── TreePost.vue                 # Post card — avatar, message, image, stats, toggles
+    ├── CommentList.vue              # Comments — fetched per-post, skeleton UI
+    ├── LikeCount.vue                # Likes count — presentational
+    └── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
+```
+
+---
+
+## API endpoints
+
+All proxied through Vite under `/bff`. The actual base is `https://youcannevertestenough.tree-nation.com/bff`.
+
+### `GET /bff/trees/feed`
+
+Paginated list of trees.
+
+| Param | Type | Notes |
+|---|---|---|
+| `page` | int | 1-based |
+| `limit` | int | Items per page |
+| `types[]` | string | Repeated: `success_seed`, `tree` |
+| `isCollected` | bool | `true` |
+| `orderByField` | string | `created_at` |
+| `sortDirection` | string | `DESC` or `ASC` (must be uppercase) |
+
+Response: `{ data: [ TreeItem, ... ] }`
+
+### `GET /bff/tree/getComments/{treeId}`
+
+All comments for a tree, sorted by `created_at` ASC.
+
+Response: `{ data: [ { id, content, created_at, author: { full_name, profile_img } }, ... ] }`
+
+### `GET /bff/tree/getLikes/{treeId}`
+
+All users who liked a tree, sorted by `created_at` ASC.
+
+Response: `{ data: [ { id, created_at, author: { full_name, profile_img } }, ... ] }`
+
+---
+
+## Features
+
+- **Infinite scroll** with IntersectionObserver sentinel (600px advance margin)
+- **Pre-fetch** of comments/likes on viewport dwell (800ms threshold)
+- **Skeleton UI** matching the exact expected count from API counters
+- **Popover modal** for likes list (Instagram-style, closes on backdrop click / Escape)
+- **Inline expand** for comments
+- **Error, empty, and loading states** for every data-fetching component
+- **S3 image fallback** with SVG placeholder
+- **In-memory cache** with 5-minute TTL for feed pages
+- **Vite proxy** to bypass CORS during development
