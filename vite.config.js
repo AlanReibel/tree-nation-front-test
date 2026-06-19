@@ -15,4 +15,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      // Proxies /bff/* to the real API to avoid CORS.
+      // The browser sees a same-origin request; Vite forwards it.
+      '/bff': {
+        target: 'https://youcannevertestenough.tree-nation.com',
+        changeOrigin: true,
+      },
+    },
+  },
 })
