@@ -77,16 +77,62 @@
     <div v-if="tree.hashtag" class="hashtag-line">
       <span class="hashtag">#{{ tree.hashtag }}</span>
     </div>
+
+    <!-- ─── Action buttons ─── -->
+    <div class="post-actions">
+      <button
+        class="action-btn"
+        :class="{ active: showComments }"
+        @click="showComments = !showComments"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        Comments
+        <span v-if="tree.comments_count != null" class="action-count">{{ tree.comments_count }}</span>
+      </button>
+
+      <button
+        class="action-btn"
+        :class="{ active: showLikes }"
+        @click="showLikes = !showLikes"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+        Likes
+        <span v-if="tree.likes_count != null" class="action-count">{{ tree.likes_count }}</span>
+      </button>
+    </div>
+
+    <!-- ─── Expanded sections ─── -->
+    <transition name="expand">
+      <div v-if="showComments" class="expanded-section">
+        <CommentList :tree-id="tree.id" />
+      </div>
+    </transition>
+
+    <transition name="expand">
+      <div v-if="showLikes" class="expanded-section">
+        <LikeUserList :tree-id="tree.id" />
+      </div>
+    </transition>
   </article>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { timeAgo, formatScore } from '@/utils/time'
+import CommentList from './CommentList.vue'
+import LikeUserList from './LikeUserList.vue'
 
 const props = defineProps({
   tree: { type: Object, required: true },
 })
+
+// --- Toggle state for comments / likes panels ---
+const showComments = ref(false)
+const showLikes = ref(false)
 
 // --- Image error fallbacks ---
 // Some S3 profile images return AccessDenied or are double-wrapped.
@@ -259,5 +305,65 @@ const ownerName = computed(() => {
   font-size: 0.8125rem;
   font-weight: 500;
   color: #2563eb;
+}
+
+/* ─── Action buttons ─── */
+.post-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.action-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.action-btn.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+.action-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Expanded sections ─── */
+.expanded-section {
+  padding: 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* ─── Expand transition ─── */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>

@@ -7,33 +7,11 @@
 | Pinia store with pagination + cache | `src/stores/treeFeed.js` |
 | IntersectionObserver infinite scroll | `src/composables/useInfiniteScroll.js` |
 | TreeFeed container (loading, empty, error, sentinel, end states) | `src/components/TreeFeed.vue` |
-| TreePost card | `src/components/TreePost.vue` |
+| TreePost card with comments/likes toggles | `src/components/TreePost.vue` |
 | Vite proxy (CORS workaround) | `vite.config.js` |
-
----
-
-## 📋 Pending Components
-
-### 1. `CommentList.vue`
-- **Props**: `treeId` (number, required)
-- **Data to fetch**: `GET /tree/getComments/{treeId}`
-  - Returns all comments with `author` and `created_at`
-  - Sort by `created_at` ascending (oldest first)
-- **States**: loading, empty ("No comments yet"), error, list with items
-- **Placement**: inside `TreePost`, toggled by a "Comments" button
-
-### 2. `LikeCount.vue`
-- **Props**: `likesCount` (number) — already available on each feed tree item
-- **Display**: icon + count, e.g. `❤️ 42`
-- **States**: shows `0` when no likes, handle gracefully when count is `null`/`undefined`
-
-### 3. `LikeUserList.vue`
-- **Props**: `treeId` (number, required)
-- **Data to fetch**: `GET /tree/getLikes/{treeId}`
-  - Returns list of users who liked, each with `created_at`
-  - Sort by `created_at` ascending
-- **States**: loading, empty, error, list with avatars/names
-- **Placement**: toggled by clicking the LikeCount or a dedicated button
+| CommentList (fetch + loading/empty/error) | `src/components/CommentList.vue` |
+| LikeCount (presentational) | `src/components/LikeCount.vue` |
+| LikeUserList (fetch + loading/empty/error) | `src/components/LikeUserList.vue` |
 
 ---
 
