@@ -7,11 +7,11 @@
 | Pinia store with pagination + cache | `src/stores/treeFeed.js` |
 | IntersectionObserver infinite scroll | `src/composables/useInfiniteScroll.js` |
 | TreeFeed container (loading, empty, error, sentinel, end states) | `src/components/TreeFeed.vue` |
-| TreePost card with comments/likes toggles | `src/components/TreePost.vue` |
+| TreePost card with pre-fetch + skeleton + Instagram-style UI | `src/components/TreePost.vue` |
 | Vite proxy (CORS workaround) | `vite.config.js` |
-| CommentList (fetch + loading/empty/error) | `src/components/CommentList.vue` |
+| CommentList (skeleton, accepts pre-fetched data) | `src/components/CommentList.vue` |
 | LikeCount (presentational) | `src/components/LikeCount.vue` |
-| LikeUserList (fetch + loading/empty/error) | `src/components/LikeUserList.vue` |
+| LikeUserList (skeleton, accepts pre-fetched data) | `src/components/LikeUserList.vue` |
 
 ---
 

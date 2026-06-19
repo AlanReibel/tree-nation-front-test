@@ -1,9 +1,14 @@
 <template>
   <div class="comment-list">
-    <!-- Loading -->
-    <div v-if="loading" class="cl-state">
-      <div class="spinner-sm" />
-      <span>Loading comments…</span>
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="cl-skeleton">
+      <div v-for="i in 3" :key="i" class="skeleton-row">
+        <div class="skeleton-avatar" />
+        <div class="skeleton-lines">
+          <div class="skeleton-line short" />
+          <div class="skeleton-line long" />
+        </div>
+      </div>
     </div>
 
     <!-- Error -->
@@ -12,13 +17,13 @@
     </div>
 
     <!-- Empty -->
-    <div v-else-if="comments.length === 0" class="cl-state empty">
+    <div v-else-if="items.length === 0" class="cl-state empty">
       <span>No comments yet.</span>
     </div>
 
     <!-- List -->
     <div v-else class="cl-items">
-      <div v-for="c in comments" :key="c.id" class="comment">
+      <div v-for="c in items" :key="c.id" class="comment">
         <img
           :src="c.author?.profile_img || defaultAvatar"
           alt=""
@@ -38,11 +43,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { timeAgo } from '@/utils/time'
 
 const props = defineProps({
-  treeId: { type: Number, required: true },
+  /** Tree ID to fetch comments for (used when data prop is not provided) */
+  treeId: { type: Number, default: null },
+  /** Pre-fetched comments — when provided, skips the internal fetch */
+  data: { type: Array, default: null },
+  /** Whether the parent is still loading pre-fetched data */
+  loading: { type: Boolean, default: false },
 })
 
 const defaultAvatar =
@@ -51,26 +61,14 @@ const defaultAvatar =
     '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
   )
 
-const comments = ref([])
-const loading = ref(true)
-const error = ref(false)
+// If data prop is provided, use it directly (parent pre-fetched).
+// Otherwise, the parent must handle the fetch and pass loading/data.
+const items = computed(() => props.data ?? [])
+const error = computed(() => false)
 
 function onAvatarError(e) {
   e.target.src = defaultAvatar
 }
-
-onMounted(async () => {
-  try {
-    const res = await fetch(`/bff/tree/getComments/${props.treeId}`)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const json = await res.json()
-    comments.value = Array.isArray(json.data) ? json.data : []
-  } catch {
-    error.value = true
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>
@@ -78,6 +76,58 @@ onMounted(async () => {
   padding: 0.75rem 0 0;
 }
 
+/* ─── Skeleton ─── */
+.cl-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 0.5rem 0;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-top: 4px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line.short {
+  width: 40%;
+}
+
+.skeleton-line.long {
+  width: 85%;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ─── States ─── */
 .cl-state {
   display: flex;
   align-items: center;
@@ -91,6 +141,7 @@ onMounted(async () => {
   color: #dc2626;
 }
 
+/* ─── Items ─── */
 .cl-items {
   display: flex;
   flex-direction: column;
@@ -142,19 +193,5 @@ onMounted(async () => {
   line-height: 1.45;
   white-space: pre-line;
   word-break: break-word;
-}
-
-/* Small spinner for inline use */
-.spinner-sm {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 </style>
