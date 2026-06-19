@@ -1,46 +1,40 @@
-import { shallowRef, onMounted, onUnmounted } from 'vue'
+import { shallowRef, onUnmounted } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
 
 /**
  * Observes a sentinel element and calls `onLoadMore` when it becomes visible.
  *
- * Extracted from flanks-front-challenge (NewsList.vue) — same IntersectionObserver
- * sentinel pattern, no VueUse dependency needed.
+ * Uses `useIntersectionObserver` from VueUse — handles the timing edge cases
+ * (target appearing/disappearing from the DOM) without manual watch logic.
  *
  * @param {Function} onLoadMore  Callback to fetch the next page
- * @param {Ref<boolean>} isLoading  Reactive flag to prevent overlapping loads
- * @param {Ref<boolean>} hasMore  Reactive flag to stop observing when done
+ * @param {import('vue').Ref<boolean>} isLoading  Reactive ref — prevents overlapping loads
+ * @param {import('vue').Ref<boolean>} hasMore  Reactive ref — stops observation when false
  * @param {Object} [options]
  * @param {string} [options.rootMargin='600px']  Advance trigger margin
  * @param {number} [options.threshold=0.5]  Visibility threshold
- * @returns {{ target: ShallowRef<HTMLElement|null> }}
+ * @returns {{ target: import('vue').ShallowRef<HTMLElement|null> }}
  */
 export function useInfiniteScroll(onLoadMore, isLoading, hasMore, options = {}) {
   const { rootMargin = '600px', threshold = 0.5 } = options
   const target = shallowRef(null)
-  let observer = null
 
-  function setupObserver() {
-    if (!target.value) return
-
-    observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !isLoading.value && hasMore.value) {
-          onLoadMore()
-        }
-      },
-      { rootMargin, threshold },
-    )
-
-    observer.observe(target.value)
-  }
-
-  onMounted(() => {
-    // Wait a tick so the sentinel is in the DOM
-    requestAnimationFrame(() => setupObserver())
-  })
+  const { stop } = useIntersectionObserver(
+    target,
+    ([entry]) => {
+      if (entry?.isIntersecting && !isLoading.value && hasMore.value) {
+        console.log('[useInfiniteScroll] ⏬ triggering loadMore')
+        onLoadMore()
+      }
+    },
+    {
+      rootMargin,
+      threshold,
+    },
+  )
 
   onUnmounted(() => {
-    observer?.disconnect()
+    stop()
   })
 
   return { target }

@@ -48,12 +48,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useTreeFeedStore } from '@/stores/treeFeed'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import TreePost from './TreePost.vue'
 
 const store = useTreeFeedStore()
+
+// storeToRefs preserves reactivity — Pinia auto-unwraps refs on the store
+// object, so store.isLoading / store.hasMore would be plain booleans.
+// We need the actual refs for the composable.
+const { isLoading, hasMore } = storeToRefs(store)
 
 const initialLoadDone = ref(false)
 
@@ -68,10 +74,11 @@ async function retry() {
 }
 
 // Wire the sentinel to loadMore
+// Pass refs (from storeToRefs), not unwrapped values.
 const { target: sentinel } = useInfiniteScroll(
   () => store.loadMore(),
-  store.isLoading,
-  store.hasMore,
+  isLoading,
+  hasMore,
 )
 
 onMounted(() => {
