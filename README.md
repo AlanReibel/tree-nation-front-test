@@ -72,7 +72,8 @@ Comments and likes are pre-fetched when a post stays in the viewport for ≥ 800
 ```
 src/
 ├── main.js                          # Entry point — creates Vue app + Pinia
-├── App.vue                          # Root layout with header + TreeFeed
+├── main.css                         # Global styles, CSS reset, shared keyframes
+├── App.vue                          # Root layout with <main> container
 │
 ├── stores/
 │   └── treeFeed.js                  # Pinia store — pagination, cache, API calls
@@ -81,14 +82,28 @@ src/
 │   └── useInfiniteScroll.js         # IntersectionObserver sentinel for infinite scroll
 │
 ├── utils/
-│   └── time.js                      # timeAgo() and formatScore() helpers
+│   ├── time.js                      # timeAgo() and formatScore() helpers
+│   └── avatar.js                    # defaultAvatar(), unwrapProfileUrl(),
+│                                    # formatPersonName(), onAvatarError()
 │
 └── components/
     ├── TreeFeed.vue                 # Feed container — loading/empty/error/sentinel states
     ├── TreePost.vue                 # Post card — avatar, message, image, stats, toggles
+    ├── PostSkeleton.vue             # Skeleton placeholder while feed loads
     ├── CommentList.vue              # Comments — fetched per-post, skeleton UI
-    ├── LikeCount.vue                # Likes count — presentational
-    └── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
+    ├── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
+    ├── LikesModal.vue               # Teleported likes popover with backdrop + Escape
+    │
+    └── icons/                       # Reusable SVG icon components (size prop)
+        ├── IconHeart.vue
+        ├── IconComment.vue
+        ├── IconDrops.vue
+        ├── IconStar.vue
+        ├── IconClose.vue
+        ├── IconGift.vue
+        ├── IconAlertCircle.vue
+        ├── IconChevronUp.vue
+        └── IconUser.vue
 ```
 
 ---
@@ -131,8 +146,8 @@ Response: `{ data: [ { id, created_at, author: { full_name, profile_img } }, ...
 - **Infinite scroll** with IntersectionObserver sentinel (600px advance margin)
 - **Pre-fetch** of comments/likes on viewport dwell (800ms threshold)
 - **Skeleton UI** matching the exact expected count from API counters
-- **Popover modal** for likes list (Instagram-style, closes on backdrop click / Escape)
-- **Inline expand** for comments
+- **Popover modal** for likes list (Teleported, scoped component, closes on backdrop click / Escape)
+- **Inline expand** for comments with grid-based height animation
 - **Error, empty, and loading states** for every data-fetching component
 - **S3 image fallback** with SVG placeholder
 - **In-memory cache** with 5-minute TTL for feed pages

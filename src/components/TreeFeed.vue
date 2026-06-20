@@ -1,28 +1,20 @@
 <template>
   <section class="tree-feed">
-    <!-- Loading indicator (initial) -->
-    <div v-if="!initialLoadDone" class="state-message loading">
-      <div class="spinner" />
-      <span>Loading trees...</span>
+    <!-- Loading skeleton (initial) -->
+    <div v-if="!initialLoadDone" class="feed-list">
+      <PostSkeleton v-for="n in 3" :key="n" />
     </div>
 
     <!-- Error state -->
     <div v-else-if="store.error" class="state-message error">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
+      <IconAlertCircle :size="24" />
       <span>{{ store.error }}</span>
       <button class="retry-btn" @click="retry">Retry</button>
     </div>
 
     <!-- Empty state -->
     <div v-else-if="store.isEmpty" class="state-message empty">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <IconUser :size="24" />
       <span>No trees found.</span>
     </div>
 
@@ -48,9 +40,7 @@
     <!-- Back to Top button -->
     <Transition name="back-top">
       <button v-if="scrollY > 400" class="back-top" @click="scrollToTop" title="Back to top">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
+        <IconChevronUp />
       </button>
     </Transition>
   </section>
@@ -61,7 +51,11 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTreeFeedStore } from '@/stores/treeFeed'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import IconAlertCircle from '@/components/icons/IconAlertCircle.vue'
+import IconUser from '@/components/icons/IconUser.vue'
+import IconChevronUp from '@/components/icons/IconChevronUp.vue'
 import TreePost from './TreePost.vue'
+import PostSkeleton from './PostSkeleton.vue'
 
 const store = useTreeFeedStore()
 
@@ -112,16 +106,75 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  .feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+  }
+
+  .state-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #6b7280;
+
+    &.error {
+      color: #dc2626;
+    }
+  }
+
+  .retry-btn {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.875rem;
+
+    &:hover {
+      background: #f9fafb;
+    }
+  }
+
+  .sentinel {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+
+    .sentinel-loading {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+  }
+
+  .end-message {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #9ca3af;
+    padding: 1rem 0;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
 }
 
-.feed-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  position: relative;
-}
-
-/* ─── Feed item enter animation ─── */
+/* ─── Feed item enter animation (transition classes, root) ─── */
 .feed-item-enter-active {
   transition: all 0.35s ease-out;
 }
@@ -131,73 +184,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   transform: translateY(24px);
 }
 
-/* ---------- State messages ---------- */
-.state-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 3rem 1rem;
-  text-align: center;
-  color: #6b7280;
-}
-
-.state-message.error {
-  color: #dc2626;
-}
-
-.retry-btn {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background: #fff;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.retry-btn:hover {
-  background: #f9fafb;
-}
-
-/* ---------- Sentinel ---------- */
-.sentinel {
-  display: flex;
-  justify-content: center;
-  padding: 1rem 0;
-}
-
-.sentinel-loading {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #9ca3af;
-}
-
-.end-message {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #9ca3af;
-  padding: 1rem 0;
-}
-
-/* ---------- Spinner ---------- */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #3b82f6;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ─── Back to Top ─── */
+/* ─── Fixed back-to-top ─── */
 .back-top {
   position: fixed;
   bottom: 1.5rem;
@@ -215,11 +202,11 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   cursor: pointer;
   z-index: 900;
   transition: background 0.15s, transform 0.15s;
-}
 
-.back-top:hover {
-  background: #374151;
-  transform: scale(1.05);
+  &:hover {
+    background: #374151;
+    transform: scale(1.05);
+  }
 }
 
 .back-top-enter-active,
@@ -232,4 +219,5 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   opacity: 0;
   transform: translateY(12px);
 }
+
 </style>
