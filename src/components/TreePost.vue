@@ -11,14 +11,14 @@
         height="36"
         @error="avatarErrored = true"
       />
-      <img v-else :src="defaultAvatar" alt="" class="avatar" />
+      <img v-else :src="defaultAvatar(36)" alt="" class="avatar" />
       <div class="header-text">
-        <span class="owner-name"
-          >{{ ownerName }}<span class="locale-flag">{{ localeFlag }}</span></span
-        >
-        <span class="planted-line"
-          >planted {{ tree.quantity }} {{ typeLabel }}</span
-        >
+        <span class="owner-name">
+          {{ ownerName }}<span class="locale-flag">{{ localeFlag }}</span>
+        </span>
+        <span class="planted-line">
+          planted {{ tree.quantity }} {{ typeLabel }}
+        </span>
       </div>
       <!-- Type icon -->
       <div class="type">
@@ -42,17 +42,7 @@
 
     <!-- ─── Recipient (gift) ─── -->
     <div v-if="tree.recipient_full_name" class="recipient-line">
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path d="M20 12H4M12 4v16" />
-        <rect x="3" y="7" width="18" height="10" rx="2" />
-      </svg>
+      <IconGift :size="14" />
       Gift for <strong>{{ tree.recipient_full_name }}</strong>
     </div>
 
@@ -79,18 +69,7 @@
           title="Likes"
           @click="showLikes = true"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-            />
-          </svg>
+          <IconHeart :size="16" />
           {{ tree.likes_count }}
         </span>
         <span
@@ -100,31 +79,11 @@
           title="Comments"
           @click="showComments = !showComments"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-            />
-          </svg>
+          <IconComment :size="16" />
           {{ tree.comments_count }}
         </span>
         <span v-if="tree.drops_count > 0" class="stat" title="Drops">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-          </svg>
+          <IconDrops :size="16" />
           {{ tree.drops_count }}
         </span>
       </span>
@@ -132,18 +91,7 @@
       <span class="stat-meta">
         <span class="stat date-stat">{{ formattedDate }}</span>
         <span class="stat score-stat" title="Score">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-            />
-          </svg>
+          <IconStar :size="14" />
           {{ formatScore(tree.score) }}
         </span>
       </span>
@@ -172,18 +120,8 @@
         <div class="likes-modal" @click.stop>
           <div class="likes-modal-header">
             <h4>Likes</h4>
-            <button class="close-btn" @click="showLikes = false">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+            <button class="close-btn btn-icon" @click="showLikes = false">
+              <IconClose :size="18" />
             </button>
           </div>
           <LikeUserList
@@ -199,161 +137,132 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from "vue";
-import { useIntersectionObserver } from "@vueuse/core";
-import { formatScore } from "@/utils/time";
-import CommentList from "./CommentList.vue";
-import LikeUserList from "./LikeUserList.vue";
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
+import { formatScore } from '@/utils/time'
+import { defaultAvatar, unwrapProfileUrl, formatPersonName } from '@/utils/avatar'
+import IconHeart from '@/components/icons/IconHeart.vue'
+import IconComment from '@/components/icons/IconComment.vue'
+import IconDrops from '@/components/icons/IconDrops.vue'
+import IconStar from '@/components/icons/IconStar.vue'
+import IconClose from '@/components/icons/IconClose.vue'
+import IconGift from '@/components/icons/IconGift.vue'
+import CommentList from './CommentList.vue'
+import LikeUserList from './LikeUserList.vue'
 
 const props = defineProps({
   tree: { type: Object, required: true },
-});
+})
 
 // --- Toggle state for comments / likes panels ---
-const showComments = ref(false);
-const showLikes = ref(false);
+const showComments = ref(false)
+const showLikes = ref(false)
 
 // Close likes modal on Escape key
 function onKeydown(e) {
-  if (e.key === "Escape" && showLikes.value) {
-    showLikes.value = false;
+  if (e.key === 'Escape' && showLikes.value) {
+    showLikes.value = false
   }
 }
-onMounted(() => document.addEventListener("keydown", onKeydown));
-onUnmounted(() => document.removeEventListener("keydown", onKeydown));
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 // ─── Pre-fetch on viewport dwell ──────────────────────────────
-// When a post stays in the viewport for ≥ 800ms (user paused to read),
-// we pre-fetch comments and likes in the background.
-// If the user clicks before it arrives, they see a skeleton instead of
-// a spinner — the data loads shortly after.
-const postRef = ref(null);
-const prefetchedComments = ref(null);
-const prefetchedLikes = ref(null);
-const prefetchingComments = ref(false);
-const prefetchingLikes = ref(false);
+const postRef = ref(null)
+const prefetchedComments = ref(null)
+const prefetchedLikes = ref(null)
+const prefetchingComments = ref(false)
+const prefetchingLikes = ref(false)
 
-let preFetchTimer = null;
+let preFetchTimer = null
 
 function cancelPreFetch() {
   if (preFetchTimer) {
-    clearTimeout(preFetchTimer);
-    preFetchTimer = null;
+    clearTimeout(preFetchTimer)
+    preFetchTimer = null
   }
 }
 
 async function fetchComments() {
-  if (prefetchedComments.value !== null) return; // already have data
-  prefetchingComments.value = true;
+  if (prefetchedComments.value !== null) return
+  prefetchingComments.value = true
   try {
-    const res = await fetch(`/bff/tree/getComments/${props.tree.id}`);
-    const json = await res.json();
-    prefetchedComments.value = Array.isArray(json.data) ? json.data : [];
+    const res = await fetch(`/bff/tree/getComments/${props.tree.id}`)
+    const json = await res.json()
+    prefetchedComments.value = Array.isArray(json.data) ? json.data : []
   } catch {
-    prefetchedComments.value = []; // prevent retry on error
+    prefetchedComments.value = []
   } finally {
-    prefetchingComments.value = false;
+    prefetchingComments.value = false
   }
 }
 
 async function fetchLikes() {
-  if (prefetchedLikes.value !== null) return; // already have data
-  prefetchingLikes.value = true;
+  if (prefetchedLikes.value !== null) return
+  prefetchingLikes.value = true
   try {
-    const res = await fetch(`/bff/tree/getLikes/${props.tree.id}`);
-    const json = await res.json();
-    prefetchedLikes.value = Array.isArray(json.data) ? json.data : [];
+    const res = await fetch(`/bff/tree/getLikes/${props.tree.id}`)
+    const json = await res.json()
+    prefetchedLikes.value = Array.isArray(json.data) ? json.data : []
   } catch {
-    prefetchedLikes.value = []; // prevent retry on error
+    prefetchedLikes.value = []
   } finally {
-    prefetchingLikes.value = false;
+    prefetchingLikes.value = false
   }
 }
 
 function startPreFetch() {
-  if (prefetchedComments.value !== null && prefetchedLikes.value !== null)
-    return;
-  fetchComments();
-  fetchLikes();
+  if (prefetchedComments.value !== null && prefetchedLikes.value !== null) return
+  fetchComments()
+  fetchLikes()
 }
 
-// Observe this post: when it has been visibly intersecting for ≥ 800ms,
-// start pre-fetching. If it scrolls out before that, cancel the timer.
 useIntersectionObserver(
   postRef,
   ([entry]) => {
     if (entry?.isIntersecting) {
-      cancelPreFetch();
-      preFetchTimer = setTimeout(startPreFetch, 800);
+      cancelPreFetch()
+      preFetchTimer = setTimeout(startPreFetch, 800)
     } else {
-      cancelPreFetch();
+      cancelPreFetch()
     }
   },
   { threshold: 0.3 },
-);
+)
 
 // --- Image error fallbacks ---
-// Some S3 profile images return AccessDenied or are double-wrapped.
-// On error we swap to a generated SVG placeholder.
-const avatarErrored = ref(false);
-const imageErrored = ref(false);
-
-const defaultAvatar =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
-  );
-
-/**
- * Some profile_img values come double-wrapped from the API:
- *   baseUrl/https%3A//baseUrl/actual-path
- * This extracts and decodes the inner URL.
- * Falls back to the raw URL if no wrapping is detected.
- */
-function unwrapProfileUrl(url) {
-  if (!url) return null;
-  const match = url.match(/https%3A\/\/([^#?]+)/i);
-  if (match) {
-    return decodeURIComponent(`https://${match[1]}`);
-  }
-  return url;
-}
+const avatarErrored = ref(false)
+const imageErrored = ref(false)
 
 const avatarSrc = computed(() => {
-  const raw = props.tree.owner?.profile_img;
-  return raw ? unwrapProfileUrl(raw) : defaultAvatar;
-});
+  const raw = props.tree.owner?.profile_img
+  return raw ? unwrapProfileUrl(raw) : defaultAvatar(36)
+})
 
-const ownerName = computed(() => {
-  const o = props.tree.owner;
-  if (!o) return "Anonymous";
-  return [o.first_name, o.last_name].filter(Boolean).join(" ") || "Anonymous";
-});
+const ownerName = computed(() => formatPersonName(props.tree.owner))
 
 const typeLabel = computed(() => {
-  const t = props.tree.type;
-  const plural = props.tree.quantity !== 1;
-  if (t === "tree") return plural ? "Trees" : "Tree";
-  return plural ? "Seeds" : "Seed";
-});
+  const t = props.tree.type
+  const plural = props.tree.quantity !== 1
+  if (t === 'tree') return plural ? 'Trees' : 'Tree'
+  return plural ? 'Seeds' : 'Seed'
+})
 
 const formattedDate = computed(() => {
-  if (!props.tree.created_at) return "";
-  const d = new Date(props.tree.created_at);
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-});
+  if (!props.tree.created_at) return ''
+  const d = new Date(props.tree.created_at)
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+})
 
 const localeFlag = computed(() => {
-  const locale = props.tree.owner?.locale;
-  const flags = { en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", it: "🇮🇹" };
-  return flags[locale] || "";
-});
-
-
+  const locale = props.tree.owner?.locale
+  const flags = { en: '🇬🇧', pt: '🇵🇹', fr: '🇫🇷', it: '🇮🇹' }
+  return flags[locale] || ''
+})
 </script>
 
 <style scoped>
@@ -412,16 +321,6 @@ const localeFlag = computed(() => {
   margin-left: 0.25rem;
   font-size: 0.875rem;
   vertical-align: middle;
-}
-
-.type-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  flex-shrink: 0;
 }
 
 /* ─── Recipient ─── */
@@ -496,20 +395,9 @@ const localeFlag = computed(() => {
   color: #2563eb;
 }
 
-.stat svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-
 .date-stat {
   font-size: 0.75rem;
   color: #9ca3af;
-}
-
-.score-stat svg {
-  width: 14px;
-  height: 14px;
 }
 
 /* ─── Hashtag ─── */
@@ -584,7 +472,7 @@ const localeFlag = computed(() => {
   color: #111827;
 }
 
-.close-btn {
+.close-btn.btn-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -598,7 +486,7 @@ const localeFlag = computed(() => {
   transition: background 0.15s;
 }
 
-.close-btn:hover {
+.close-btn.btn-icon:hover {
   background: #e5e7eb;
   color: #374151;
 }
@@ -609,22 +497,12 @@ const localeFlag = computed(() => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

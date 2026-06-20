@@ -22,10 +22,10 @@
     <div v-else class="ll-items">
       <div v-for="u in items" :key="u.id" class="like-user">
         <img
-          :src="u.author?.profile_img || defaultAvatar"
+          :src="u.author?.profile_img || defaultAvatar(28)"
           alt=""
           class="user-avatar"
-          @error="onAvatarError($event)"
+          @error="onAvatarError($event, 28)"
         />
         <span class="user-name">{{ u.author?.full_name || 'Anonymous' }}</span>
       </div>
@@ -35,6 +35,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { defaultAvatar, onAvatarError } from '@/utils/avatar'
 
 const props = defineProps({
   /** Tree ID to fetch likes for (used when data prop is not provided) */
@@ -50,18 +51,8 @@ const props = defineProps({
 // Show as many skeletons as the expected count, max 8 to avoid clutter
 const skeletonCount = computed(() => Math.min(Math.max(props.expectedCount, 1), 8))
 
-const defaultAvatar =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
-  )
-
 const items = computed(() => props.data ?? [])
 const error = computed(() => false)
-
-function onAvatarError(e) {
-  e.target.src = defaultAvatar
-}
 </script>
 
 <style scoped>

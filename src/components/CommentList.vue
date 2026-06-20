@@ -25,10 +25,10 @@
     <div v-else class="cl-items">
       <div v-for="c in items" :key="c.id" class="comment">
         <img
-          :src="c.author?.profile_img || defaultAvatar"
+          :src="c.author?.profile_img || defaultAvatar(32)"
           alt=""
           class="comment-avatar"
-          @error="onAvatarError($event)"
+          @error="onAvatarError($event, 32)"
         />
         <div class="comment-body">
           <div class="comment-header">
@@ -45,6 +45,7 @@
 <script setup>
 import { computed } from 'vue'
 import { timeAgo } from '@/utils/time'
+import { defaultAvatar, onAvatarError } from '@/utils/avatar'
 
 const props = defineProps({
   /** Tree ID to fetch comments for (used when data prop is not provided) */
@@ -60,20 +61,10 @@ const props = defineProps({
 // Show as many skeletons as the expected count, max 5 to avoid clutter
 const skeletonCount = computed(() => Math.min(Math.max(props.expectedCount, 1), 5))
 
-const defaultAvatar =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
-  )
-
 // If data prop is provided, use it directly (parent pre-fetched).
 // Otherwise, the parent must handle the fetch and pass loading/data.
 const items = computed(() => props.data ?? [])
 const error = computed(() => false)
-
-function onAvatarError(e) {
-  e.target.src = defaultAvatar
-}
 </script>
 
 <style scoped>
