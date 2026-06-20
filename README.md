@@ -4,6 +4,8 @@ Social feed of planted trees with infinite scroll, comments, and likes.
 
 Built with **Vue 3**, **Pinia**, and **Vite**.
 
+CSS uses **native nesting** (max 3 levels) and **semantic class names** — no utility frameworks. Critical styles (reset, body, header, shared keyframes) are inlined in `index.html` to prevent FOUC on initial load.
+
 ---
 
 ## How to run
@@ -70,9 +72,15 @@ Comments and likes are pre-fetched when a post stays in the viewport for ≥ 800
 ## App structure
 
 ```
+public/
+├── favicon.ico
+└── assets/
+    ├── tree-icon.png                 # Tree type icon in post header
+    └── seed-icon.png                 # Seed type icon in post header
+
 src/
 ├── main.js                          # Entry point — creates Vue app + Pinia
-├── main.css                         # Global styles, CSS reset, shared keyframes
+├── main.css                         # Global style reference (CSS loaded inline in index.html)
 ├── App.vue                          # Root layout with <main> container
 │
 ├── stores/
@@ -87,14 +95,14 @@ src/
 │                                    # formatPersonName(), onAvatarError()
 │
 └── components/
-    ├── TreeFeed.vue                 # Feed container — loading/empty/error/sentinel states
-    ├── TreePost.vue                 # Post card — avatar, message, image, stats, toggles
-    ├── PostSkeleton.vue             # Skeleton placeholder while feed loads
-    ├── CommentList.vue              # Comments — fetched per-post, skeleton UI
-    ├── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
-    ├── LikesModal.vue               # Teleported likes popover with backdrop + Escape
+    ├── TreeFeed.vue                 # Feed container — loading (3× PostSkeleton), error, empty, sentinel
+    ├── TreePost.vue                 # Post card — avatar, message, image, stats, comments toggle
+    ├── PostSkeleton.vue             # Animated card skeleton (3 shown during initial load)
+    ├── CommentList.vue              # Comments — skeleton, error, empty states
+    ├── LikeUserList.vue             # Like users — chip list with skeleton states
+    ├── LikesModal.vue               # Teleported popover modal with backdrop + Escape handler
     │
-    └── icons/                       # Reusable SVG icon components (size prop)
+    └── icons/                       # Reusable SVG icon components (size prop via :size="N")
         ├── IconHeart.vue
         ├── IconComment.vue
         ├── IconDrops.vue
@@ -145,10 +153,12 @@ Response: `{ data: [ { id, created_at, author: { full_name, profile_img } }, ...
 
 - **Infinite scroll** with IntersectionObserver sentinel (600px advance margin)
 - **Pre-fetch** of comments/likes on viewport dwell (800ms threshold)
-- **Skeleton UI** matching the exact expected count from API counters
-- **Popover modal** for likes list (Teleported, scoped component, closes on backdrop click / Escape)
-- **Inline expand** for comments with grid-based height animation
+- **Skeleton UI** — PostSkeleton for initial feed load (3 animated cards), inline skeletons for comments/likes matching exact API counters
+- **Popover modal** for likes list (Teleported via LikesModal, scoped styles, closes on backdrop click / Escape)
+- **Inline expand** for comments with grid-based 0fr/1fr height animation
 - **Error, empty, and loading states** for every data-fetching component
-- **S3 image fallback** with SVG placeholder
+- **S3 image fallback** with SVG placeholder (handles double-wrapped URLs and AccessDenied)
 - **In-memory cache** with 5-minute TTL for feed pages
+- **CSS native nesting** (max 3 levels) with role-based class names — no flat BEM or utility classes
+- **FOUC-free** — critical CSS (reset, body, header, keyframes) inlined in index.html
 - **Vite proxy** to bypass CORS during development
