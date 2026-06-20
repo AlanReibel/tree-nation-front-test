@@ -1,28 +1,20 @@
 <template>
   <section class="tree-feed">
-    <!-- Loading indicator (initial) -->
-    <div v-if="!initialLoadDone" class="state-message loading">
-      <div class="spinner" />
-      <span>Loading trees...</span>
+    <!-- Loading skeleton (initial) -->
+    <div v-if="!initialLoadDone" class="feed-list">
+      <PostSkeleton v-for="n in 3" :key="n" />
     </div>
 
     <!-- Error state -->
     <div v-else-if="store.error" class="state-message error">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
+      <IconAlertCircle :size="24" />
       <span>{{ store.error }}</span>
       <button class="retry-btn" @click="retry">Retry</button>
     </div>
 
     <!-- Empty state -->
     <div v-else-if="store.isEmpty" class="state-message empty">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <IconUser :size="24" />
       <span>No trees found.</span>
     </div>
 
@@ -48,9 +40,7 @@
     <!-- Back to Top button -->
     <Transition name="back-top">
       <button v-if="scrollY > 400" class="back-top" @click="scrollToTop" title="Back to top">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
+        <IconChevronUp />
       </button>
     </Transition>
   </section>
@@ -61,7 +51,11 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTreeFeedStore } from '@/stores/treeFeed'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import IconAlertCircle from '@/components/icons/IconAlertCircle.vue'
+import IconUser from '@/components/icons/IconUser.vue'
+import IconChevronUp from '@/components/icons/IconChevronUp.vue'
 import TreePost from './TreePost.vue'
+import PostSkeleton from './PostSkeleton.vue'
 
 const store = useTreeFeedStore()
 

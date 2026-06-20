@@ -111,30 +111,19 @@
       </div>
     </transition>
 
-    <!-- ─── Likes popover modal ─── -->
-    <Teleport to="body">
-      <div v-if="showLikes" class="likes-backdrop" @click="showLikes = false">
-        <div class="likes-modal" @click.stop>
-          <div class="header">
-            <h4>Likes</h4>
-            <button class="close btn-icon" @click="showLikes = false">
-              <IconClose :size="18" />
-            </button>
-          </div>
-          <LikeUserList
-            :tree-id="tree.id"
-            :data="prefetchedLikes"
-            :loading="prefetchingLikes"
-            :expected-count="tree.likes_count"
-          />
-        </div>
-      </div>
-    </Teleport>
+    <LikesModal
+      v-if="showLikes"
+      :tree-id="tree.id"
+      :likes-count="tree.likes_count"
+      :prefetched-likes="prefetchedLikes"
+      :prefetching-likes="prefetchingLikes"
+      @close="showLikes = false"
+    />
   </article>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import { formatScore } from '@/utils/time'
 import { defaultAvatar, unwrapProfileUrl, formatPersonName } from '@/utils/avatar'
@@ -142,10 +131,9 @@ import IconHeart from '@/components/icons/IconHeart.vue'
 import IconComment from '@/components/icons/IconComment.vue'
 import IconDrops from '@/components/icons/IconDrops.vue'
 import IconStar from '@/components/icons/IconStar.vue'
-import IconClose from '@/components/icons/IconClose.vue'
 import IconGift from '@/components/icons/IconGift.vue'
 import CommentList from './CommentList.vue'
-import LikeUserList from './LikeUserList.vue'
+import LikesModal from './LikesModal.vue'
 
 const props = defineProps({
   tree: { type: Object, required: true },
@@ -154,15 +142,6 @@ const props = defineProps({
 // --- Toggle state for comments / likes panels ---
 const showComments = ref(false)
 const showLikes = ref(false)
-
-// Close likes modal on Escape key
-function onKeydown(e) {
-  if (e.key === 'Escape' && showLikes.value) {
-    showLikes.value = false
-  }
-}
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 // ─── Pre-fetch on viewport dwell ──────────────────────────────
 const postRef = ref(null)
@@ -424,70 +403,6 @@ article {
   max-height: 0;
   padding-top: 0;
   padding-bottom: 0;
-}
-
-/* ─── Likes modal (teleportado al body) ─── */
-.likes-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.15s ease;
-}
-
-.likes-modal {
-  width: 90%;
-  max-width: 380px;
-  max-height: 70vh;
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: scaleIn 0.15s ease;
-
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-
-    h4 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .close {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border: none;
-      border-radius: 50%;
-      background: #f3f4f6;
-      color: #6b7280;
-      cursor: pointer;
-      transition: background 0.15s;
-
-      &:hover {
-        background: #e5e7eb;
-        color: #374151;
-      }
-    }
-  }
-
-  :deep(.like-list) {
-    overflow-y: auto;
-    padding: 0.75rem 1rem;
-  }
 }
 
 </style>

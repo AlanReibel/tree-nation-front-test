@@ -24,7 +24,7 @@
         <img
           :src="u.author?.profile_img || defaultAvatar(28)"
           alt=""
-          class="user-avatar"
+          class="avatar"
           @error="onAvatarError($event, 28)"
         />
         <span>{{ u.author?.full_name || "Anonymous" }}</span>
