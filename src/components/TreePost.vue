@@ -1,31 +1,55 @@
 <template>
   <article ref="postRef" class="tree-post">
-    <!-- ─── Header: avatar + name + time ─── -->
+    <!-- ─── Header: avatar + name + planted label ─── -->
     <div class="post-header">
       <img
         v-if="!avatarErrored"
         :src="avatarSrc"
         alt=""
         class="avatar"
+        width="36"
+        height="36"
         @error="avatarErrored = true"
       />
-      <img
-        v-else
-        :src="defaultAvatar"
-        alt=""
-        class="avatar"
-      />
+      <img v-else :src="defaultAvatar" alt="" class="avatar" />
       <div class="header-text">
-        <span class="owner-name">{{ ownerName }}</span>
-        <span class="time">{{ timeAgo(tree.created_at) }}</span>
+        <span class="owner-name"
+          >{{ ownerName }}<span class="locale-flag">{{ localeFlag }}</span></span
+        >
+        <span class="planted-line"
+          >planted {{ tree.quantity }} {{ typeLabel }}</span
+        >
       </div>
-      <span v-if="tree.type === 'seed'" class="type-badge seed" title="This is a seed, not yet a tree">Seed</span>
-      <span v-else class="type-badge tree">Tree</span>
+      <!-- Type icon -->
+      <div class="type">
+        <small>{{ tree.quantity }}</small>
+        <img
+          v-if="tree.type === 'seed'"
+          src="/assets/seed-icon.png"
+          alt="Seed"
+          width="34"
+          height="34"
+        />
+        <img
+          v-else
+          src="/assets/tree-icon.png"
+          alt="Tree"
+          width="34"
+          height="34"
+        />
+      </div>
     </div>
 
     <!-- ─── Recipient (gift) ─── -->
     <div v-if="tree.recipient_full_name" class="recipient-line">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <path d="M20 12H4M12 4v16" />
         <rect x="3" y="7" width="18" height="10" rx="2" />
       </svg>
@@ -45,43 +69,83 @@
       @error="imageErrored = true"
     />
 
-    <!-- ─── Stats row ─── -->
+    <!-- ─── Stats row: interactions left, metadata right ─── -->
     <div class="post-stats">
-      <span class="stat" title="Score">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-        {{ formatScore(tree.score) }}
+      <span class="stat-group">
+        <span
+          v-if="tree.likes_count != null"
+          class="stat clickable"
+          :class="{ 'stat-active': showLikes }"
+          title="Likes"
+          @click="showLikes = true"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            />
+          </svg>
+          {{ tree.likes_count }}
+        </span>
+        <span
+          v-if="tree.comments_count != null"
+          class="stat clickable"
+          :class="{ 'stat-active': showComments }"
+          title="Comments"
+          @click="showComments = !showComments"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          {{ tree.comments_count }}
+        </span>
+        <span v-if="tree.drops_count > 0" class="stat" title="Drops">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+          </svg>
+          {{ tree.drops_count }}
+        </span>
       </span>
-      <span
-        v-if="tree.likes_count != null"
-        class="stat clickable"
-        :class="{ 'stat-active': showLikes }"
-        title="Likes"
-        @click="showLikes = true"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-        {{ tree.likes_count }}
-      </span>
-      <span
-        v-if="tree.comments_count != null"
-        class="stat clickable"
-        :class="{ 'stat-active': showComments }"
-        title="Comments"
-        @click="showComments = !showComments"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-        {{ tree.comments_count }}
-      </span>
-      <span v-if="tree.drops_count > 0" class="stat" title="Drops">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-        </svg>
-        {{ tree.drops_count }}
+
+      <span class="stat-meta">
+        <span class="stat date-stat">{{ formattedDate }}</span>
+        <span class="stat score-stat" title="Score">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            />
+          </svg>
+          {{ formatScore(tree.score) }}
+        </span>
       </span>
     </div>
 
@@ -109,7 +173,14 @@
           <div class="likes-modal-header">
             <h4>Likes</h4>
             <button class="close-btn" @click="showLikes = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -128,81 +199,82 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useIntersectionObserver } from '@vueuse/core'
-import { timeAgo, formatScore } from '@/utils/time'
-import CommentList from './CommentList.vue'
-import LikeUserList from './LikeUserList.vue'
+import { computed, ref, onMounted, onUnmounted } from "vue";
+import { useIntersectionObserver } from "@vueuse/core";
+import { formatScore } from "@/utils/time";
+import CommentList from "./CommentList.vue";
+import LikeUserList from "./LikeUserList.vue";
 
 const props = defineProps({
   tree: { type: Object, required: true },
-})
+});
 
 // --- Toggle state for comments / likes panels ---
-const showComments = ref(false)
-const showLikes = ref(false)
+const showComments = ref(false);
+const showLikes = ref(false);
 
 // Close likes modal on Escape key
 function onKeydown(e) {
-  if (e.key === 'Escape' && showLikes.value) {
-    showLikes.value = false
+  if (e.key === "Escape" && showLikes.value) {
+    showLikes.value = false;
   }
 }
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onUnmounted(() => document.removeEventListener('keydown', onKeydown))
+onMounted(() => document.addEventListener("keydown", onKeydown));
+onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 
 // ─── Pre-fetch on viewport dwell ──────────────────────────────
 // When a post stays in the viewport for ≥ 800ms (user paused to read),
 // we pre-fetch comments and likes in the background.
 // If the user clicks before it arrives, they see a skeleton instead of
 // a spinner — the data loads shortly after.
-const postRef = ref(null)
-const prefetchedComments = ref(null)
-const prefetchedLikes = ref(null)
-const prefetchingComments = ref(false)
-const prefetchingLikes = ref(false)
+const postRef = ref(null);
+const prefetchedComments = ref(null);
+const prefetchedLikes = ref(null);
+const prefetchingComments = ref(false);
+const prefetchingLikes = ref(false);
 
-let preFetchTimer = null
+let preFetchTimer = null;
 
 function cancelPreFetch() {
   if (preFetchTimer) {
-    clearTimeout(preFetchTimer)
-    preFetchTimer = null
+    clearTimeout(preFetchTimer);
+    preFetchTimer = null;
   }
 }
 
 async function fetchComments() {
-  if (prefetchedComments.value !== null) return // already have data
-  prefetchingComments.value = true
+  if (prefetchedComments.value !== null) return; // already have data
+  prefetchingComments.value = true;
   try {
-    const res = await fetch(`/bff/tree/getComments/${props.tree.id}`)
-    const json = await res.json()
-    prefetchedComments.value = Array.isArray(json.data) ? json.data : []
+    const res = await fetch(`/bff/tree/getComments/${props.tree.id}`);
+    const json = await res.json();
+    prefetchedComments.value = Array.isArray(json.data) ? json.data : [];
   } catch {
-    prefetchedComments.value = [] // prevent retry on error
+    prefetchedComments.value = []; // prevent retry on error
   } finally {
-    prefetchingComments.value = false
+    prefetchingComments.value = false;
   }
 }
 
 async function fetchLikes() {
-  if (prefetchedLikes.value !== null) return // already have data
-  prefetchingLikes.value = true
+  if (prefetchedLikes.value !== null) return; // already have data
+  prefetchingLikes.value = true;
   try {
-    const res = await fetch(`/bff/tree/getLikes/${props.tree.id}`)
-    const json = await res.json()
-    prefetchedLikes.value = Array.isArray(json.data) ? json.data : []
+    const res = await fetch(`/bff/tree/getLikes/${props.tree.id}`);
+    const json = await res.json();
+    prefetchedLikes.value = Array.isArray(json.data) ? json.data : [];
   } catch {
-    prefetchedLikes.value = [] // prevent retry on error
+    prefetchedLikes.value = []; // prevent retry on error
   } finally {
-    prefetchingLikes.value = false
+    prefetchingLikes.value = false;
   }
 }
 
 function startPreFetch() {
-  if (prefetchedComments.value !== null && prefetchedLikes.value !== null) return
-  fetchComments()
-  fetchLikes()
+  if (prefetchedComments.value !== null && prefetchedLikes.value !== null)
+    return;
+  fetchComments();
+  fetchLikes();
 }
 
 // Observe this post: when it has been visibly intersecting for ≥ 800ms,
@@ -211,26 +283,26 @@ useIntersectionObserver(
   postRef,
   ([entry]) => {
     if (entry?.isIntersecting) {
-      cancelPreFetch()
-      preFetchTimer = setTimeout(startPreFetch, 800)
+      cancelPreFetch();
+      preFetchTimer = setTimeout(startPreFetch, 800);
     } else {
-      cancelPreFetch()
+      cancelPreFetch();
     }
   },
   { threshold: 0.3 },
-)
+);
 
 // --- Image error fallbacks ---
 // Some S3 profile images return AccessDenied or are double-wrapped.
 // On error we swap to a generated SVG placeholder.
-const avatarErrored = ref(false)
-const imageErrored = ref(false)
+const avatarErrored = ref(false);
+const imageErrored = ref(false);
 
 const defaultAvatar =
-  'data:image/svg+xml,' +
+  "data:image/svg+xml," +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect fill="#e5e7eb" width="40" height="40" rx="20"/><circle fill="#9ca3af" cx="20" cy="16" r="6"/><path fill="#9ca3af" d="M8 34c0-6 5.5-10 12-10s12 4 12 10"/></svg>',
-  )
+  );
 
 /**
  * Some profile_img values come double-wrapped from the API:
@@ -239,24 +311,49 @@ const defaultAvatar =
  * Falls back to the raw URL if no wrapping is detected.
  */
 function unwrapProfileUrl(url) {
-  if (!url) return null
-  const match = url.match(/https%3A\/\/([^#?]+)/i)
+  if (!url) return null;
+  const match = url.match(/https%3A\/\/([^#?]+)/i);
   if (match) {
-    return decodeURIComponent(`https://${match[1]}`)
+    return decodeURIComponent(`https://${match[1]}`);
   }
-  return url
+  return url;
 }
 
 const avatarSrc = computed(() => {
-  const raw = props.tree.owner?.profile_img
-  return raw ? unwrapProfileUrl(raw) : defaultAvatar
-})
+  const raw = props.tree.owner?.profile_img;
+  return raw ? unwrapProfileUrl(raw) : defaultAvatar;
+});
 
 const ownerName = computed(() => {
-  const o = props.tree.owner
-  if (!o) return 'Anonymous'
-  return [o.first_name, o.last_name].filter(Boolean).join(' ') || 'Anonymous'
-})
+  const o = props.tree.owner;
+  if (!o) return "Anonymous";
+  return [o.first_name, o.last_name].filter(Boolean).join(" ") || "Anonymous";
+});
+
+const typeLabel = computed(() => {
+  const t = props.tree.type;
+  const plural = props.tree.quantity !== 1;
+  if (t === "tree") return plural ? "Trees" : "Tree";
+  return plural ? "Seeds" : "Seed";
+});
+
+const formattedDate = computed(() => {
+  if (!props.tree.created_at) return "";
+  const d = new Date(props.tree.created_at);
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+});
+
+const localeFlag = computed(() => {
+  const locale = props.tree.owner?.locale;
+  const flags = { en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", it: "🇮🇹" };
+  return flags[locale] || "";
+});
+
+
 </script>
 
 <style scoped>
@@ -305,29 +402,26 @@ const ownerName = computed(() => {
   line-height: 1.3;
 }
 
-.time {
+.planted-line {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #6b7280;
+  line-height: 1.3;
 }
 
-.type-badge {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
+.locale-flag {
+  margin-left: 0.25rem;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   flex-shrink: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.type-badge.seed {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.type-badge.tree {
-  background: #d1fae5;
-  color: #065f46;
 }
 
 /* ─── Recipient ─── */
@@ -364,8 +458,21 @@ const ownerName = computed(() => {
 /* ─── Stats ─── */
 .post-stats {
   display: flex;
-  gap: 1.25rem;
+  justify-content: space-between;
+  align-items: center;
   padding-top: 0.25rem;
+}
+
+.stat-group {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.stat-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .stat {
@@ -393,6 +500,16 @@ const ownerName = computed(() => {
   width: 15px;
   height: 15px;
   flex-shrink: 0;
+}
+
+.date-stat {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.score-stat svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ─── Hashtag ─── */
@@ -492,12 +609,22 @@ const ownerName = computed(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

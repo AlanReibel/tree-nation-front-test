@@ -58,10 +58,7 @@ export const useTreeFeedStore = defineStore('treeFeed', () => {
         orderByField: 'created_at',
         sortDirection: 'DESC',
       })
-      // types[] needs manual append — URLSearchParams object notation
-      // doesn't handle repeated keys with array syntax.
-      params.append('types[]', 'success_seed')
-      params.append('types[]', 'tree')
+
 
       const cacheKey = params.toString()
       const cached = getCached(cacheKey)
