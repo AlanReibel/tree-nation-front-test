@@ -72,7 +72,7 @@ Comments and likes are pre-fetched when a post stays in the viewport for ≥ 800
 ```
 src/
 ├── main.js                          # Entry point — creates Vue app + Pinia
-├── App.vue                          # Root layout with header + TreeFeed
+├── App.vue                          # Root layout with <main> container
 │
 ├── stores/
 │   └── treeFeed.js                  # Pinia store — pagination, cache, API calls
@@ -81,14 +81,24 @@ src/
 │   └── useInfiniteScroll.js         # IntersectionObserver sentinel for infinite scroll
 │
 ├── utils/
-│   └── time.js                      # timeAgo() and formatScore() helpers
+│   ├── time.js                      # timeAgo() and formatScore() helpers
+│   └── avatar.js                    # defaultAvatar(), unwrapProfileUrl(),
+│                                    # formatPersonName(), onAvatarError()
 │
 └── components/
     ├── TreeFeed.vue                 # Feed container — loading/empty/error/sentinel states
     ├── TreePost.vue                 # Post card — avatar, message, image, stats, toggles
     ├── CommentList.vue              # Comments — fetched per-post, skeleton UI
+    ├── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
     ├── LikeCount.vue                # Likes count — presentational
-    └── LikeUserList.vue             # Like users — fetched per-post, skeleton UI
+    │
+    └── icons/                       # Reusable SVG icon components
+        ├── IconHeart.vue
+        ├── IconComment.vue
+        ├── IconDrops.vue
+        ├── IconStar.vue
+        ├── IconClose.vue
+        └── IconGift.vue
 ```
 
 ---

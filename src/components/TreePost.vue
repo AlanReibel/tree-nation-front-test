@@ -1,7 +1,7 @@
 <template>
   <article ref="postRef" class="tree-post">
     <!-- ─── Header: avatar + name + planted label ─── -->
-    <div class="post-header">
+    <header>
       <img
         v-if="!avatarErrored"
         :src="avatarSrc"
@@ -38,7 +38,7 @@
           height="34"
         />
       </div>
-    </div>
+    </header>
 
     <!-- ─── Recipient (gift) ─── -->
     <div v-if="tree.recipient_full_name" class="recipient-line">
@@ -47,20 +47,19 @@
     </div>
 
     <!-- ─── Message ─── -->
-    <p v-if="tree.message" class="message">{{ tree.message }}</p>
+    <p v-if="tree.message">{{ tree.message }}</p>
 
     <!-- ─── Image ─── -->
     <img
       v-if="tree.image && !imageErrored"
       :src="tree.image"
       alt="Tree photo"
-      class="post-image"
       loading="lazy"
       @error="imageErrored = true"
     />
 
     <!-- ─── Stats row: interactions left, metadata right ─── -->
-    <div class="post-stats">
+    <footer>
       <span class="stat-group">
         <span
           v-if="tree.likes_count != null"
@@ -95,12 +94,10 @@
           {{ formatScore(tree.score) }}
         </span>
       </span>
-    </div>
+    </footer>
 
     <!-- ─── Hashtag ─── -->
-    <div v-if="tree.hashtag" class="hashtag-line">
-      <span class="hashtag">#{{ tree.hashtag }}</span>
-    </div>
+    <p v-if="tree.hashtag" class="hashtag">#{{ tree.hashtag }}</p>
 
     <!-- ─── Expanded comments ─── -->
     <transition name="expand">
@@ -266,7 +263,7 @@ const localeFlag = computed(() => {
 </script>
 
 <style scoped>
-.tree-post {
+article {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
@@ -275,149 +272,146 @@ const localeFlag = computed(() => {
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
   transition: box-shadow 0.15s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #e5e7eb;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+
+      .owner-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #111827;
+        line-height: 1.3;
+
+        .locale-flag {
+          margin-left: 0.25rem;
+          font-size: 0.875rem;
+          vertical-align: middle;
+        }
+      }
+
+      .planted-line {
+        font-size: 0.75rem;
+        color: #6b7280;
+        line-height: 1.3;
+      }
+    }
+  }
+
+  /* ── Recipient ── */
+  .recipient-line {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
+
+    strong {
+      color: #374151;
+    }
+  }
+
+  /* ── Message — único <p> en el artículo ── */
+  p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: #1f2937;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+
+  /* ── Post image — direct child, no afecta avatar del header ── */
+  > img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 0.625rem;
+    background: #f3f4f6;
+  }
+
+  /* ── Stats / footer ── */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.25rem;
+
+    .stat-group {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .stat-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8125rem;
+      color: #6b7280;
+
+      &.clickable {
+        cursor: pointer;
+        transition: color 0.15s;
+
+        &:hover {
+          color: #374151;
+        }
+      }
+
+      &.stat-active {
+        color: #2563eb;
+      }
+    }
+
+    .date-stat {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+  }
+
+  /* ── Hashtag ── */
+  .hashtag {
+    padding-top: 0.125rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #2563eb;
+  }
+
+  /* ── Expanded comments ── */
+  .expanded-section {
+    padding: 0;
+    border-top: 1px solid #f3f4f6;
+  }
 }
 
-.tree-post:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* ─── Header ─── */
-.post-header {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: #e5e7eb;
-}
-
-.header-text {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.owner-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #111827;
-  line-height: 1.3;
-}
-
-.planted-line {
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1.3;
-}
-
-.locale-flag {
-  margin-left: 0.25rem;
-  font-size: 0.875rem;
-  vertical-align: middle;
-}
-
-/* ─── Recipient ─── */
-.recipient-line {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  color: #6b7280;
-}
-
-.recipient-line strong {
-  color: #374151;
-}
-
-/* ─── Message ─── */
-.message {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: #1f2937;
-  line-height: 1.5;
-  white-space: pre-line;
-}
-
-/* ─── Image ─── */
-.post-image {
-  width: 100%;
-  max-height: 400px;
-  object-fit: cover;
-  border-radius: 0.625rem;
-  background: #f3f4f6;
-}
-
-/* ─── Stats ─── */
-.post-stats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 0.25rem;
-}
-
-.stat-group {
-  display: flex;
-  gap: 1.25rem;
-}
-
-.stat-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-  color: #6b7280;
-}
-
-.stat.clickable {
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.stat.clickable:hover {
-  color: #374151;
-}
-
-.stat.stat-active {
-  color: #2563eb;
-}
-
-.date-stat {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-/* ─── Hashtag ─── */
-.hashtag-line {
-  padding-top: 0.125rem;
-}
-
-.hashtag {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #2563eb;
-}
-
-/* ─── Expanded comments ─── */
-.expanded-section {
-  padding: 0;
-  border-top: 1px solid #f3f4f6;
-}
-
-/* ─── Expand transition ─── */
+/* ─── Expand transition (no se puede anidar, va al root) ─── */
 .expand-enter-active,
 .expand-leave-active {
   transition: all 0.2s ease;
@@ -432,7 +426,7 @@ const localeFlag = computed(() => {
   padding-bottom: 0;
 }
 
-/* ─── Likes popover modal ─── */
+/* ─── Likes modal (teleportado al body) ─── */
 .likes-backdrop {
   position: fixed;
   inset: 0;
@@ -455,45 +449,45 @@ const localeFlag = computed(() => {
   flex-direction: column;
   overflow: hidden;
   animation: scaleIn 0.15s ease;
-}
 
-.likes-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-}
+  .likes-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
 
-.likes-modal-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-}
+    h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+    }
 
-.close-btn.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background 0.15s;
-}
+    .close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      cursor: pointer;
+      transition: background 0.15s;
 
-.close-btn.btn-icon:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
+      &:hover {
+        background: #e5e7eb;
+        color: #374151;
+      }
+    }
+  }
 
-.likes-modal :deep(.like-list) {
-  overflow-y: auto;
-  padding: 0.75rem 1rem;
+  :deep(.like-list) {
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+  }
 }
 
 @keyframes fadeIn {
