@@ -115,9 +115,9 @@
     <Teleport to="body">
       <div v-if="showLikes" class="likes-backdrop" @click="showLikes = false">
         <div class="likes-modal" @click.stop>
-          <div class="likes-modal-header">
+          <div class="header">
             <h4>Likes</h4>
-            <button class="close-btn btn-icon" @click="showLikes = false">
+            <button class="close btn-icon" @click="showLikes = false">
               <IconClose :size="18" />
             </button>
           </div>
@@ -450,7 +450,7 @@ article {
   overflow: hidden;
   animation: scaleIn 0.15s ease;
 
-  .likes-modal-header {
+  .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -464,7 +464,7 @@ article {
       color: #111827;
     }
 
-    .close-btn {
+    .close {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -490,13 +490,4 @@ article {
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
 </style>

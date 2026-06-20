@@ -56,7 +56,7 @@ export const useTreeFeedStore = defineStore('treeFeed', () => {
         limit: PAGE_LIMIT.toString(),
         isCollected: 'true',
         orderByField: 'created_at',
-        sortDirection: 'DESC',
+        sortDirection: 'ASC',
       })
 
 
