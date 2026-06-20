@@ -13,7 +13,9 @@
       />
       <img v-else :src="defaultAvatar" alt="" class="avatar" />
       <div class="header-text">
-        <span class="owner-name">{{ ownerName }}</span>
+        <span class="owner-name"
+          >{{ ownerName }}<span class="locale-flag">{{ localeFlag }}</span></span
+        >
         <span class="planted-line"
           >planted {{ tree.quantity }} {{ typeLabel }}</span
         >
@@ -344,6 +346,14 @@ const formattedDate = computed(() => {
     year: "numeric",
   });
 });
+
+const localeFlag = computed(() => {
+  const locale = props.tree.owner?.locale;
+  const flags = { en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", it: "🇮🇹" };
+  return flags[locale] || "";
+});
+
+
 </script>
 
 <style scoped>
@@ -396,6 +406,12 @@ const formattedDate = computed(() => {
   font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.3;
+}
+
+.locale-flag {
+  margin-left: 0.25rem;
+  font-size: 0.875rem;
+  vertical-align: middle;
 }
 
 .type-icon {
